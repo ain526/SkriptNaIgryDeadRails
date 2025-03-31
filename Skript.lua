@@ -1,92 +1,64 @@
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local player = game.Players.LocalPlayer
+local backpack = player.Backpack
 
-local player = Players.LocalPlayer
+-- Создаем GUI для ввода
 local screenGui = Instance.new("ScreenGui")
-screenGui.Parent = player:FindFirstChild("PlayerGui")
+screenGui.Parent = player:WaitForChild("PlayerGui")
 
--- Создание текстового поля для координат
-local positionLabel = Instance.new("TextLabel")
-positionLabel.Size = UDim2.new(0, 250, 0, 50)
-positionLabel.Position = UDim2.new(0, 10, 0, 10)
-positionLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-positionLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-positionLabel.TextScaled = true
-positionLabel.Parent = screenGui
+-- Название окна
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Size = UDim2.new(0, 300, 0, 50)
+titleLabel.Position = UDim2.new(0, 10, 0, 10)
+titleLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+titleLabel.TextScaled = true
+titleLabel.Text = "Получить предмет"
+titleLabel.Parent = screenGui
 
--- Поле для ввода имени игрока
-local playerNameBox = Instance.new("TextBox")
-playerNameBox.Size = UDim2.new(0, 200, 0, 40)
-playerNameBox.Position = UDim2.new(0, 10, 0, 70)
-playerNameBox.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-playerNameBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-playerNameBox.PlaceholderText = "Введите имя игрока"
-playerNameBox.Parent = screenGui
+-- Поле для названия предмета
+local itemNameLabel = Instance.new("TextLabel")
+itemNameLabel.Size = UDim2.new(0, 200, 0, 50)
+itemNameLabel.Position = UDim2.new(0, 10, 0, 70)
+itemNameLabel.Text = "Название предмета:"
+itemNameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+itemNameLabel.Parent = screenGui
 
--- Поле для ввода X координаты
-local xCoordBox = Instance.new("TextBox")
-xCoordBox.Size = UDim2.new(0, 60, 0, 40)
-xCoordBox.Position = UDim2.new(0, 10, 0, 120)
-xCoordBox.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-xCoordBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-xCoordBox.PlaceholderText = "X"
-xCoordBox.Parent = screenGui
+local itemNameInput = Instance.new("TextBox")
+itemNameInput.Size = UDim2.new(0, 200, 0, 30)
+itemNameInput.Position = UDim2.new(0, 10, 0, 120)
+itemNameInput.PlaceholderText = "Введите название предмета"
+itemNameInput.Parent = screenGui
 
--- Поле для ввода Y координаты
-local yCoordBox = Instance.new("TextBox")
-yCoordBox.Size = UDim2.new(0, 60, 0, 40)
-yCoordBox.Position = UDim2.new(0, 80, 0, 120)
-yCoordBox.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-yCoordBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-yCoordBox.PlaceholderText = "Y"
-yCoordBox.Parent = screenGui
+-- Кнопка для добавления предмета в инвентарь
+local giveItemButton = Instance.new("TextButton")
+giveItemButton.Size = UDim2.new(0, 200, 0, 40)
+giveItemButton.Position = UDim2.new(0, 10, 0, 160)
+giveItemButton.Text = "Добавить в инвентарь"
+giveItemButton.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+giveItemButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+giveItemButton.Parent = screenGui
 
--- Поле для ввода Z координаты
-local zCoordBox = Instance.new("TextBox")
-zCoordBox.Size = UDim2.new(0, 60, 0, 40)
-zCoordBox.Position = UDim2.new(0, 150, 0, 120)
-zCoordBox.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-zCoordBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-zCoordBox.PlaceholderText = "Z"
-zCoordBox.Parent = screenGui
-
--- Кнопка для телепортации
-local teleportButton = Instance.new("TextButton")
-teleportButton.Size = UDim2.new(0, 200, 0, 50)
-teleportButton.Position = UDim2.new(0, 10, 0, 180)
-teleportButton.BackgroundColor3 = Color3.fromRGB(0, 100, 255)
-teleportButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-teleportButton.Text = "Телепортировать"
-teleportButton.Parent = screenGui
-
--- Функция для телепортации игрока
-local function teleportPlayer()
-    local targetPlayerName = playerNameBox.Text
-    local targetPlayer = Players:FindFirstChild(targetPlayerName)
-
-    if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-        local x = tonumber(xCoordBox.Text)
-        local y = tonumber(yCoordBox.Text)
-        local z = tonumber(zCoordBox.Text)
-
-        if x and y and z then
-            targetPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(Vector3.new(x, y, z))
-            print("Игрок " .. targetPlayerName .. " телепортирован в (" .. x .. ", " .. y .. ", " .. z .. ")")
-        else
-            warn("Неверный формат координат!")
-        end
+-- Функция для добавления предмета в инвентарь
+local function giveItemToBackpack(itemName)
+    local item = ReplicatedStorage:FindFirstChild(itemName)
+    if item then
+        local clonedItem = item:Clone()  -- Клонируем предмет
+        clonedItem.Parent = backpack     -- Добавляем в рюкзак игрока
+        print("Предмет '" .. itemName .. "' добавлен в инвентарь.")
     else
-        warn("Игрок не найден или его персонаж не загружен!")
+        warn("Предмет с именем '" .. itemName .. "' не найден в ReplicatedStorage!")
     end
 end
 
--- Привязка кнопки к функции
-teleportButton.MouseButton1Click:Connect(teleportPlayer)
-
--- Обновление текущих координат игрока
-RunService.RenderStepped:Connect(function()
-    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-        local pos = player.Character.HumanoidRootPart.Position
-        positionLabel.Text = string.format("Ваши координаты: X: %.2f | Y: %.2f | Z: %.2f", pos.X, pos.Y, pos.Z)
+-- Обработка нажатия кнопки
+giveItemButton.MouseButton1Click:Connect(function()
+    local itemName = itemNameInput.Text
+    
+    -- Проверяем, что введено название предмета
+    if itemName ~= "" then
+        giveItemToBackpack(itemName)  -- Добавляем предмет в инвентарь
+    else
+        warn("Введите название предмета!")
     end
 end)
