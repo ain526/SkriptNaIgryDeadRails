@@ -1,121 +1,63 @@
 local player = game.Players.LocalPlayer
-local backpack = player.Backpack
-local StarterPack = game:GetService("StarterPack")  -- Используем StarterPack для поиска предметов
-
--- Создаем GUI для ввода и списка предметов
+local mouse = player:GetMouse()
 local screenGui = Instance.new("ScreenGui")
 screenGui.Parent = player:WaitForChild("PlayerGui")
 
--- Название окна
-local titleLabel = Instance.new("TextLabel")
-titleLabel.Size = UDim2.new(0, 300, 0, 50)
-titleLabel.Position = UDim2.new(0, 10, 0, 10)
-titleLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-titleLabel.TextScaled = true
-titleLabel.Text = "Получить предмет"
-titleLabel.Parent = screenGui
-
--- Поле для названия предмета
+-- Создаем объект для отображения названия предмета при наведении
 local itemNameLabel = Instance.new("TextLabel")
 itemNameLabel.Size = UDim2.new(0, 200, 0, 50)
-itemNameLabel.Position = UDim2.new(0, 10, 0, 70)
-itemNameLabel.Text = "Название предмета:"
+itemNameLabel.Position = UDim2.new(0, 0, 0, 0)
+itemNameLabel.BackgroundTransparency = 1
 itemNameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+itemNameLabel.TextScaled = true
+itemNameLabel.Text = "Название предмета"
+itemNameLabel.Visible = false  -- Сначала скрыто
 itemNameLabel.Parent = screenGui
 
-local itemNameInput = Instance.new("TextBox")
-itemNameInput.Size = UDim2.new(0, 200, 0, 30)
-itemNameInput.Position = UDim2.new(0, 10, 0, 120)
-itemNameInput.PlaceholderText = "Введите название предмета"
-itemNameInput.Parent = screenGui
+-- Функция для отслеживания наведения на предметы
+local function onItemHover(item)
+    itemNameLabel.Text = item.Name  -- Показываем имя предмета
+    itemNameLabel.Visible = true    -- Показываем название
+end
 
--- Кнопка для добавления предмета в инвентарь
-local giveItemButton = Instance.new("TextButton")
-giveItemButton.Size = UDim2.new(0, 200, 0, 40)
-giveItemButton.Position = UDim2.new(0, 10, 0, 160)
-giveItemButton.Text = "Добавить в инвентарь"
-giveItemButton.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
-giveItemButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-giveItemButton.Parent = screenGui
+-- Функция для скрытия названия, когда мышь уходит с предмета
+local function onItemUnhover()
+    itemNameLabel.Visible = false
+end
 
--- Список предметов, доступных в StarterPack
-local itemListLabel = Instance.new("TextLabel")
-itemListLabel.Size = UDim2.new(0, 200, 0, 50)
-itemListLabel.Position = UDim2.new(0, 10, 0, 210)
-itemListLabel.Text = "Доступные предметы:"
-itemListLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-itemListLabel.Parent = screenGui
-
-local itemList = Instance.new("ScrollingFrame")
-itemList.Size = UDim2.new(0, 200, 0, 150)
-itemList.Position = UDim2.new(0, 10, 0, 260)
-itemList.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-itemList.Parent = screenGui
-
-local itemListLayout = Instance.new("UIListLayout")
-itemListLayout.Padding = UDim.new(0, 5)
-itemListLayout.FillDirection = Enum.FillDirection.Vertical
-itemListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-itemListLayout.Parent = itemList
-
--- Функция для получения списка предметов из StarterPack
-local function updateItemList()
-    -- Очистка списка
-    for _, child in pairs(itemList:GetChildren()) do
-        if child:IsA("TextButton") then
-            child:Destroy()
-        end
-    end
-
-    -- Получаем все предметы из StarterPack
-    local foundItems = false  -- Флаг, чтобы проверить, нашли ли мы предметы
-    for _, item in pairs(StarterPack:GetChildren()) do
-        if item:IsA("Tool") then
-            foundItems = true
-            -- Создаем кнопки для каждого предмета в списке
-            local itemButton = Instance.new("TextButton")
-            itemButton.Size = UDim2.new(0, 180, 0, 40)
-            itemButton.Text = item.Name
-            itemButton.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
-            itemButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-            itemButton.Parent = itemList
-
-            -- Обработка нажатия на кнопку с предметом
-            itemButton.MouseButton1Click:Connect(function()
-                itemNameInput.Text = item.Name  -- Устанавливаем название предмета в поле ввода
-            end)
-        end
-    end
-
-    if not foundItems then
-        warn("Предметы не найдены в StarterPack!")
+-- Проверка на объекты типа Tool в StarterPack
+local function checkForHover()
+    local target = mouse.Target
+    if target and target:IsA("Tool") then
+        onItemHover(target)
+    else
+        onItemUnhover()
     end
 end
 
--- Вызываем обновление списка предметов при запуске
-updateItemList()
+-- Подключаем отслеживание движения мыши
+mouse.Move:Connect(checkForHover)
+
+-- Создаем список предметов в StarterPack
+local StarterPack = game:GetService("StarterPack")
+
+-- Функция для отображения списка предметов
+local function updateItemList()
+    -- Очистка списка
+    -- (Допустим, у вас есть код для добавления кнопок в список предметов)
+end
 
 -- Функция для добавления предмета в инвентарь
 local function giveItemToBackpack(itemName)
     local item = StarterPack:FindFirstChild(itemName)
     if item then
         local clonedItem = item:Clone()  -- Клонируем предмет
-        clonedItem.Parent = backpack     -- Добавляем в рюкзак игрока
+        clonedItem.Parent = player.Backpack     -- Добавляем в рюкзак игрока
         print("Предмет '" .. itemName .. "' добавлен в инвентарь.")
     else
         warn("Предмет с именем '" .. itemName .. "' не найден в StarterPack!")
     end
 end
 
--- Обработка нажатия кнопки "Добавить в инвентарь"
-giveItemButton.MouseButton1Click:Connect(function()
-    local itemName = itemNameInput.Text
-    
-    -- Проверяем, что введено название предмета
-    if itemName ~= "" then
-        giveItemToBackpack(itemName)  -- Добавляем предмет в инвентарь
-    else
-        warn("Введите название предмета!")
-    end
-end)
+-- Функция для обновления GUI и взаимодействия с кнопками и предметами
+updateItemList()
