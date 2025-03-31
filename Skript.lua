@@ -1,6 +1,6 @@
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local player = game.Players.LocalPlayer
 local backpack = player.Backpack
+local StarterPack = game:GetService("StarterPack")  -- Используем StarterPack для поиска предметов
 
 -- Создаем GUI для ввода и списка предметов
 local screenGui = Instance.new("ScreenGui")
@@ -39,7 +39,7 @@ giveItemButton.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
 giveItemButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 giveItemButton.Parent = screenGui
 
--- Список предметов, доступных на сервере
+-- Список предметов, доступных в StarterPack
 local itemListLabel = Instance.new("TextLabel")
 itemListLabel.Size = UDim2.new(0, 200, 0, 50)
 itemListLabel.Position = UDim2.new(0, 10, 0, 210)
@@ -59,7 +59,7 @@ itemListLayout.FillDirection = Enum.FillDirection.Vertical
 itemListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 itemListLayout.Parent = itemList
 
--- Функция для получения списка предметов
+-- Функция для получения списка предметов из StarterPack
 local function updateItemList()
     -- Очистка списка
     for _, child in pairs(itemList:GetChildren()) do
@@ -68,9 +68,11 @@ local function updateItemList()
         end
     end
 
-    -- Получаем все предметы из ReplicatedStorage
-    for _, item in pairs(ReplicatedStorage:GetChildren()) do
+    -- Получаем все предметы из StarterPack
+    local foundItems = false  -- Флаг, чтобы проверить, нашли ли мы предметы
+    for _, item in pairs(StarterPack:GetChildren()) do
         if item:IsA("Tool") then
+            foundItems = true
             -- Создаем кнопки для каждого предмета в списке
             local itemButton = Instance.new("TextButton")
             itemButton.Size = UDim2.new(0, 180, 0, 40)
@@ -85,6 +87,10 @@ local function updateItemList()
             end)
         end
     end
+
+    if not foundItems then
+        warn("Предметы не найдены в StarterPack!")
+    end
 end
 
 -- Вызываем обновление списка предметов при запуске
@@ -92,13 +98,13 @@ updateItemList()
 
 -- Функция для добавления предмета в инвентарь
 local function giveItemToBackpack(itemName)
-    local item = ReplicatedStorage:FindFirstChild(itemName)
+    local item = StarterPack:FindFirstChild(itemName)
     if item then
         local clonedItem = item:Clone()  -- Клонируем предмет
         clonedItem.Parent = backpack     -- Добавляем в рюкзак игрока
         print("Предмет '" .. itemName .. "' добавлен в инвентарь.")
     else
-        warn("Предмет с именем '" .. itemName .. "' не найден в ReplicatedStorage!")
+        warn("Предмет с именем '" .. itemName .. "' не найден в StarterPack!")
     end
 end
 
